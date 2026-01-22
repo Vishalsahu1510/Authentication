@@ -1,0 +1,68 @@
+for rate limiting use upstash {redis} provides 250mb storage sufficient for 10k users 
+
+
+
+
+// what is NoSql injection
+//  https://portswigger.net/web-security/nosql-injection
+
+// how to prevent NoSql injection
+// 1. Input Validation: Always validate and sanitize user inputs to ensure they conform to expected formats.
+// 2. Use ORM/ODM: Utilize Object-Relational Mapping (ORM) or Object-Document Mapping (ODM) libraries that abstract database queries and help prevent injection attacks.
+// 3. Parameterized Queries: Use parameterized queries or prepared statements to separate code from data, making it difficult for attackers to inject malicious code.
+// 4. Least Privilege Principle: Limit database user permissions to only what is necessary for the application to function, reducing the potential impact of an injection attack.
+// 5. Regular Security Audits: Conduct regular security audits and code reviews to identify and fix potential vulnerabilities in the application.
+
+
+
+
+// mongo_sanitize is a library that helps prevent NoSQL injection attacks by sanitizing user inputs. It removes any keys that start with '$' or contain '.' from objects, which are commonly used in NoSQL injection attacks.
+// To use mongo_sanitize, you can install it via npm and then apply it to user inputs before processing them. Here's an example: 
+
+-------------------------------------------------------------
+
+const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+Math.random() is NOT cryptographically secure.
+
+Why this matters
+
+OTPs are security-sensitive
+
+Math.random() can be predictable
+
+Vulnerable to brute-force or prediction attacks
+
+For password reset, login, or email verification, this is not safe enough.
+
+
+✅ Use crypto.randomInt (BEST)
+import { randomInt } from "crypto";
+
+const otp = randomInt(100000, 1000000).toString();
+
+Why this is better
+
+✔ Cryptographically secure
+✔ Uniform distribution
+✔ Same 6-digit guarantee
+✔ Built into Node.js
+
+
+🔐 Another secure option
+import { randomBytes } from "crypto";
+
+const otp = (parseInt(randomBytes(3).toString("hex"), 16) % 900000 + 100000).toString();
+
+
+But randomInt is cleaner and safer.
+
+Best practice OTP checklist
+
+✔ Use cryptographically secure randomness
+✔ Store OTP hashed in DB/Redis
+✔ Set TTL (5–10 minutes)
+✔ Limit attempts (rate-limit)
+✔ Invalidate after use
+
+------------------------------------------------------------------------
