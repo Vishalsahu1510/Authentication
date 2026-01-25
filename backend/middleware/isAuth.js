@@ -6,7 +6,7 @@ export const isAuth = async (req, res, next) => {
     const token = req.cookies.accessToken;
 
     if (!token) {
-      return res.status(403).json({ message: "Please Login - No token provided" });
+      return res.status(403).json({ message: "Please Login - No token provided" });   // 403 is very imp it used in apiIntercepter.js
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);

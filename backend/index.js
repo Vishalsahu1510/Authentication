@@ -3,10 +3,13 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import connectDB from './config/db.js';
 import {createClient} from 'redis';
-
+import cors from 'cors';
 dotenv.config();
 
 await connectDB();
+
+
+
 
 const redisUrl = process.env.REDIS_URL;
 if (!redisUrl) {
@@ -29,7 +32,11 @@ const app = express();
 // middlewares
 app.use(express.json());
 app.use(cookieParser());
-
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+}));
 // Import user routes
 import userRoutes from './routes/user.js';
 

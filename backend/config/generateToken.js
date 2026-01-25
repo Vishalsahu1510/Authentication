@@ -16,15 +16,15 @@ export const generateToken = async (id,res) => {
 
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
-    // secure: true, // read only https
-    sameSite: 'Strict',
+    secure: true, // read only https
+    sameSite: 'none',
     maxAge: 15 * 60 * 1000, // 15 minute
   });
 
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    // secure: true, // read only https
-    sameSite: 'None',
+    secure: true, // read only https
+    sameSite: 'none',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 

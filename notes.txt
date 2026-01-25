@@ -66,3 +66,12 @@ Best practice OTP checklist
 ✔ Invalidate after use
 
 ------------------------------------------------------------------------
+
+
+
+
+“We use Axios interceptors to catch 403 errors.
+When access token expires, we call refresh token API.
+To avoid multiple refresh calls, we use a refresh lock and queue system.
+Once token is refreshed, all pending requests are retried automatically.”
+
