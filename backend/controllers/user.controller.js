@@ -209,6 +209,56 @@ export const verifyOtp = TryCatch(async(req,res) =>{
   
 });
 
+
+// //---------------- Resend otp---------------// //
+export const resendOtp = TryCatch(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+
+  const rateLimitKey = `resend_otp_rate-limit:${req.ip}:${email}`;
+
+  // --- rate-limit check
+  if (await redisClient.get(rateLimitKey)) {
+    return res.status(429).json({
+      message: "Please wait 1 minute before requesting another OTP"
+    });
+  }
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(400).json({ message: "User not found" });
+  }
+
+  const otpKey = `otp:${email}`;
+
+
+  await redisClient.del(otpKey);
+
+  const otp = crypto.randomInt(100000, 1000000).toString();
+
+  await redisClient.set(
+    otpKey,
+    JSON.stringify(otp),
+    { EX: 300 } // 5 minutes
+  );
+
+  const subject = "Your OTP Code for Login";
+  const html = getOtpHtml({ email, otp });
+
+  await sendMail({ email, subject, html });
+
+  // ✅ set resend limit
+  await redisClient.set(rateLimitKey, "true", { EX: 60 });
+
+  res.status(200).json({
+    message:
+      "If your email is valid, a new OTP has been sent. It will expire in 5 minutes."
+  });
+});
+
 //-------------- my profile ------------------//
 export const myProfile = TryCatch(async(req,res) =>{
 
