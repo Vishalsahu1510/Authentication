@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Server } from '../main.jsx';
@@ -8,10 +8,39 @@ const VerifyOtp = () => {
 
   const [otp, setOtp] = useState("");
   const [loading, setloading] = useState(false);
+  const [timer, setTimer] = useState(60);
+  const [canResend, setCanResend] = useState(false);
 
   const navigate = useNavigate();
 
   const email = localStorage.getItem("email");
+
+  useEffect(() => {
+    let interval;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    } else {
+      setCanResend(true);
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [timer]);
+
+  const resendOtpHandler = async () => {
+    try {
+      setloading(true);
+      const { data } = await axios.post(`${Server}/api/v1/resendOtp`, { email }, { withCredentials: true });
+      toast.success(data.message);
+      setTimer(60);
+      setCanResend(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Something went wrong");
+    } finally {
+      setloading(false);
+    }
+  }
 
   const submitHandler = async (e) => {
     e.preventDefault();
@@ -46,9 +75,20 @@ const VerifyOtp = () => {
           <button className="text-white  bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg" disabled={loading}>
             {loading ? "Verifying..." : "Verify"}
           </button>
-          <p className="text-xs text-gray-500 mt-3">
-            <Link to="/login">Go to Login</Link>
-          </p>
+
+          <div className="flex justify-between items-center mt-3">
+            <p className="text-xs text-gray-500">
+              <Link to="/login" className="hover:text-indigo-500">Go to Login</Link>
+            </p>
+            <button
+              type="button"
+              onClick={resendOtpHandler}
+              disabled={!canResend || loading}
+              className={`text-xs font-medium ${canResend ? 'text-indigo-600 hover:text-indigo-800' : 'text-gray-400'}`}
+            >
+              {canResend ? "Resend OTP" : `Resend in ${timer}s`}
+            </button>
+          </div>
         </form>
       </div>
     </section>
