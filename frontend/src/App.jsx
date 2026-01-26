@@ -8,7 +8,7 @@ import Verify from './pages/Verify.jsx'
 import { ToastContainer } from "react-toastify";
 import { AppData } from './context/AppContext.jsx'
 import Loading from './loading.jsx'
-
+import Dashboard from './pages/Dashboard.jsx'
 
 const App = () => {
 
@@ -21,7 +21,8 @@ const App = () => {
           <Route path='/login' element={isAuth ? <Home /> : <Login /> } />
           <Route path='/register' element={isAuth ? <Home /> : <Register />} />
           <Route path='/verifyOtp' element={isAuth ? <Home /> : <VerifyOtp />} />
-          <Route path='/verify' element={isAuth ? <Home /> : <Verify />} />
+          <Route path='/token/:token' element={isAuth ? <Home /> : <Verify />} />
+          <Route path='/dashboard' element={isAuth ? <Dashboard /> : <Login />} />
         </Routes>
         <ToastContainer />
       </BrowserRouter>}

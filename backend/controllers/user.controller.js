@@ -104,7 +104,7 @@ export const verifyUser = TryCatch(async (req, res) => {
   await redisClient.del(verifyKey); // Remove the token after successful verification
 
   res.status(201).json({ 
-    message: "User verified and registered successfully",
+    message: "Email verified and User registered successfully",
     user:{
       _id: newUser._id, 
       name: newUser.name, 
@@ -267,6 +267,7 @@ export const myProfile = TryCatch(async(req,res) =>{
   res.status(200).json(user);
 });
 
+////----------------refresh token---------------////
 export const refreshToken = TryCatch(async(req,res) =>{ 
   const refreshToken = req.cookies.refreshToken;
 
@@ -285,7 +286,7 @@ export const refreshToken = TryCatch(async(req,res) =>{
   res.status(200).json({ message: "Access token refreshed successfully." });
 });
 
-
+////--------------Logout ----------------////
 export const logoutUser = TryCatch(async(req,res) =>{
   const userId = req.user._id;
 
@@ -300,7 +301,7 @@ export const logoutUser = TryCatch(async(req,res) =>{
   res.status(200).json({ message: "Logged out successfully." });
 });
 
-
+////----------------- refresh csrf token-------------------//
 export const refreshCSRF = TryCatch(async(req,res) =>{
   const userId = req.user._id;
   const newCSRFToken = await generateCSRFToken(userId, res);
@@ -310,6 +311,14 @@ export const refreshCSRF = TryCatch(async(req,res) =>{
   });
 
 });
+
+////---------admin controller ----------------////
+export const adminController = TryCatch(async(req,res) =>{
+  res.json({
+    message: "Hello Admin",
+  })
+});
+
 
 
 

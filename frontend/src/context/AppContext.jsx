@@ -13,7 +13,7 @@ export const AppProvider = ({ children }) => {
         setLoading(true);
         try {
             const { data } = await api.get(`api/v1/me`);
-            setUser(data);  // Backend returns user directly, not { user: ... }
+            setUser(data);  
             setIsAuth(true);
         } catch (error) {
             console.log(error);
