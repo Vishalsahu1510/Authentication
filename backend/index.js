@@ -2,7 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import connectDB from './config/db.js';
-import {createClient} from 'redis';
+import {redisClient} from './config/redis.js';
 import cors from 'cors';
 dotenv.config();
 
@@ -11,15 +11,7 @@ await connectDB();
 
 
 
-const redisUrl = process.env.REDIS_URL;
-if (!redisUrl) {
-  console.error("REDIS_URL is not defined in environment variables");
-  process.exit(1);
-}
 
-export const redisClient = createClient({
-  url: redisUrl,
-});
 
 redisClient.connect()
 .then(() => {

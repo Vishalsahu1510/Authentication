@@ -1,13 +1,14 @@
 import TryCatch from "../middleware/tryCatch.js";
 import sanitize from 'mongo-sanitize';
 import { loginSchema, registerSchema } from "../config/zod.js";
-import { redisClient } from "../index.js";
+import { redisClient } from "../config/redis.js";
 import { User } from "../models/user.model.js";
 import bcrypt from "bcrypt"
 import crypto from "crypto";
 import sendMail from "../config/sendMail.js";
 import { getVerifyEmailHtml, getOtpHtml } from "../config/html.js";
 import { generateAccessToken, generateToken, revokeRefreshToken, verifyRefreshToken } from "../config/generateToken.js";
+import { generateCSRFToken } from "../config/csrfMiddleware.js";
 
 
 export const registerUser = TryCatch(async (req, res) => {
@@ -292,10 +293,22 @@ export const logoutUser = TryCatch(async(req,res) =>{
 
   res.clearCookie('accessToken');
   res.clearCookie('refreshToken');
+  res.clearCookie('csrfToken');
 
   await redisClient.del(`user:${userId}`);
 
   res.status(200).json({ message: "Logged out successfully." });
+});
+
+
+export const refreshCSRF = TryCatch(async(req,res) =>{
+  const userId = req.user._id;
+  const newCSRFToken = await generateCSRFToken(userId, res);
+  res.status(200).json({ 
+    message: "CSRF token refreshed successfully.", 
+    csrfToken: newCSRFToken 
+  });
+
 });
 
 

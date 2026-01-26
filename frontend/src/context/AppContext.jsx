@@ -8,12 +8,12 @@ export const AppProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isAuth, setIsAuth] = useState(false);
     const [loading, setLoading] = useState(true);
-    
+
     async function fetchUser() {
         setLoading(true);
         try {
-            const {data} = await api.get(`api/v1/me`);
-            setUser(data.user);
+            const { data } = await api.get(`api/v1/me`);
+            setUser(data);  // Backend returns user directly, not { user: ... }
             setIsAuth(true);
         } catch (error) {
             console.log(error);
@@ -22,17 +22,18 @@ export const AppProvider = ({ children }) => {
         }
     }
 
-    async function logoutUser() {
+    async function logoutUser(navigate) {
         try {
-            const {data} = await api.post(`api/v1/logout`);
+            const { data } = await api.post(`api/v1/logout`);
             toast.success(data.message);
             setUser(null);
             setIsAuth(false);
+            navigate('/login');
         } catch (error) {
             toast.error(error.response.data.message);
         }
     }
-    
+
     useEffect(() => {
         fetchUser();
     }, []);
