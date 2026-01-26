@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Server } from '../main.jsx';
 import { toast } from 'react-toastify';
+import { AppData } from '../context/AppContext.jsx';
 
 const VerifyOtp = () => {
 
@@ -12,6 +13,7 @@ const VerifyOtp = () => {
   const [canResend, setCanResend] = useState(false);
 
   const navigate = useNavigate();
+  const {setIsAuth, setUser } = AppData();
 
   const email = localStorage.getItem("email");
 
@@ -47,10 +49,11 @@ const VerifyOtp = () => {
     setloading(true);
     // Handle form submission logic here
     try {
-      const data = await axios.post(`${Server}/api/v1/verify`, { email, otp }, { withCredentials: true });
-      toast.success(data.data.message);
+      const {data} = await axios.post(`${Server}/api/v1/verify`, { email, otp }, { withCredentials: true });
+      toast.success(data.message);
+      setIsAuth(true);
+      setUser(data.user);
       localStorage.removeItem("email");
-      navigate("/");
     } catch (error) {
       toast.error(error.response.data.message);
     } finally {

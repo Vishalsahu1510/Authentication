@@ -263,7 +263,7 @@ export const resendOtp = TryCatch(async (req, res) => {
 export const myProfile = TryCatch(async(req,res) =>{
 
   const user = req.user;
-  res.status(200).json({ user });
+  res.status(200).json(user);
 });
 
 export const refreshToken = TryCatch(async(req,res) =>{ 
