@@ -6,10 +6,10 @@ import { User } from "../models/user.model.js";
 import bcrypt from "bcrypt"
 import crypto from "crypto";
 import sendMail from "../config/sendMail.js";
-import { getVerifyEmailHtml, getOtpHtml } from "../config/html.js";
+import { getVerifyEmailHtml, getOtpHtml, getForgotPasswordHtml } from "../config/html.js";
 import { generateAccessToken, generateToken, revokeRefreshToken, verifyRefreshToken } from "../config/generateToken.js";
 import { generateCSRFToken } from "../config/csrfMiddleware.js";
-import { date } from "zod";
+import jwt from "jsonwebtoken";
 
 
 export const registerUser = TryCatch(async (req, res) => {
@@ -345,6 +345,92 @@ export const adminController = TryCatch(async(req,res) =>{
     message: "Hello Admin",
   })
 });
+
+////------------------ forgot password ------------------////
+
+export const forgotPassword = TryCatch(async(req,res) =>{
+  const { email } = req.body;
+
+  if(!email){
+    return res.status(400).json({ message: "Email is required" });
+  }
+
+  const rateLimitKey = `forgot-password-rate-limit:${req.ip}:${email}`;
+
+  if(await redisClient.get(rateLimitKey)){
+    return res.status(429).json({ message: "Please wait 1 minute " });
+  }
+
+  const user = await User.findOne({ email });
+
+  if(!user){
+    return res.status(400).json({ message: "User not found" });
+  }
+
+  const verifyToken = jwt.sign({ email }, process.env.JWT_SECRET_KEY, { expiresIn: '5m' });
+  const verifyKey = `forgot-password-verify:${verifyToken}`;
+  await redisClient.set(verifyKey, verifyToken, {EX: 300}); // 5 minutes
+
+  // http://localhost:5173/forgot-password/sdakfjoaijfojalskdjfoiaw
+    const subject = "Your verification code for forgot password";
+    const html = getForgotPasswordHtml({ token: verifyToken });
+
+    await sendMail({email, subject, html});
+
+  
+  await redisClient.set(rateLimitKey, "true", {EX: 60}); // 1 attempt per minute
+
+
+  res.status(200).json({
+     message: "If your email is valid, an OTP has been sent to your email. It will expire in 5 minutes." 
+    });
+  
+});
+
+
+////------------------------ verifyForgotPassword------------////
+
+export const verifyAndResetPassword = TryCatch(async(req,res) =>{
+  const { token } = req.params;
+  if(!token){
+    return res.status(400).json({ message: "Verification token is required" });
+  }
+
+  const verifyKey = `forgot-password-verify:${token}`;
+
+  const verifyToken = await redisClient.get(verifyKey);
+
+  if(!verifyToken){
+    return res.status(400).json({ message: "Invalid token" });
+  }
+
+  const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+
+  const { password } = req.body;
+
+  if(!password){
+    return res.status(400).json({ message: "Password is required" });
+  }
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const user = await User.findOneAndUpdate({ email: decoded.email }, { $set: { password: hashedPassword } });
+
+  if(!user){
+    return res.status(400).json({ message: "User not found" });
+  }
+  await redisClient.del(verifyKey);
+
+
+  const tokens = await generateToken(user._id, res);
+
+  res.status(200).json({
+    message: "Password reset successfully",
+    user,
+    tokens
+  });
+});
+
+
+
 
 
 

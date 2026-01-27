@@ -1,24 +1,24 @@
-import  jwt  from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { redisClient } from "../config/redis.js";
 import { generateCSRFToken, revokeCSRFToken } from "./csrfMiddleware.js";
 import crypto from "crypto";
 
-export const generateToken = async (id,res) => {
+export const generateToken = async (id, res) => {
 
   const sessionId = crypto.randomBytes(16).toString("hex");
-   
+
   const accessToken = jwt.sign({ id, sessionId }, process.env.JWT_SECRET_KEY, { expiresIn: '15m' });
 
   const refreshToken = jwt.sign({ id, sessionId }, process.env.REFRESH_SECRET_KEY, { expiresIn: '7d' });
 
   const refreshTokenKey = `refresh_token:${id}`;
   const activeSessionKey = `active_session:${id}`;
-  const sessionDataKey = `session:${id}`;
+  const sessionDataKey = `session:${sessionId}`;
 
   const existingSession = await redisClient.get(activeSessionKey);
-  if(existingSession){
+  if (existingSession) {
     await redisClient.del(`session:${existingSession}`);
-    await redisClient.del(refreshToken);
+    await redisClient.del(refreshTokenKey);
   }
 
   const sessionData = {
@@ -46,10 +46,10 @@ export const generateToken = async (id,res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 
-  const csrfToken = await generateCSRFToken(id,res);
+  const csrfToken = await generateCSRFToken(id, res);
 
-  return {accessToken, refreshToken, csrfToken, sessionId};
-  
+  return { accessToken, refreshToken, csrfToken, sessionId };
+
 };
 
 export const verifyRefreshToken = async (refreshToken) => {
@@ -57,7 +57,7 @@ export const verifyRefreshToken = async (refreshToken) => {
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET_KEY);
 
     const refreshTokenKey = `refresh_token:${decoded.id}`;
-    const storedToken = await redisClient.get(refreshTokenKey); 
+    const storedToken = await redisClient.get(refreshTokenKey);
     if (storedToken !== refreshToken) {
       return null;
     }
@@ -83,7 +83,7 @@ export const verifyRefreshToken = async (refreshToken) => {
 };
 
 
-export const generateAccessToken = (id, sessionId,res) => {
+export const generateAccessToken = (id, sessionId, res) => {
   const options = {
     expiresIn: '15m',
   };
@@ -100,11 +100,11 @@ export const generateAccessToken = (id, sessionId,res) => {
 
 export const revokeRefreshToken = async (userId) => {
   const activeSessionId = await redisClient.get(`active_session:${userId}`);
-  
+
   await redisClient.del(`refresh_token:${userId}`);
   await redisClient.del(`active_session:${userId}`);
 
-  if(activeSessionId){
+  if (activeSessionId) {
     await redisClient.del(`session:${activeSessionId}`);
   }
   await revokeCSRFToken(userId);
