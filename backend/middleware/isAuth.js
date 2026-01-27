@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { redisClient } from "../config/redis.js";
 import { User } from "../models/user.model.js";
+import { isActiveSession } from "../config/generateToken.js";
 export const isAuth = async (req, res, next) => {
   try {
     const token = req.cookies.accessToken;
@@ -15,10 +16,20 @@ export const isAuth = async (req, res, next) => {
       return res.status(400).json({ message: "Invalid token, authorization denied" });
     }
 
+    const sessionActive = await isActiveSession(decoded.id, decoded.sessionId);
+
+    if(!sessionActive){
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+      res.clearCookie('csrfToken');
+      return res.status(401).json({ message: "Session expired. You have been logged in from another device" });
+    }
+
     const cacheUser = await redisClient.get(`user:${decoded.id}`);
 
     if (cacheUser) {
       req.user = JSON.parse(cacheUser);
+      req.sessionId = decoded.sessionId;
       return next();
     }
 
@@ -31,6 +42,7 @@ export const isAuth = async (req, res, next) => {
     await redisClient.setEx(`user:${user._id}`, 3600, JSON.stringify(user)); // Cache for 1 hour
 
     req.user = user;
+    req.sessionId = decoded.sessionId;
     next();
   } catch (error) {
     // console.error("Authentication error:", error);

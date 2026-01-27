@@ -51,7 +51,7 @@ const Login = () => {
             {loading ? "submiting..." : "Login"}
           </button>
           <p className="text-xs text-gray-500 mt-3">
-            <Link to="/register">Don't have an account? Register</Link>
+            <Link to="/register" className='text-blue-500 hover:text-blue-800'>Don't have an account? Register</Link>
           </p>
         </form>
       </div>

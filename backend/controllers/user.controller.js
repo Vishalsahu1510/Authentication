@@ -9,6 +9,7 @@ import sendMail from "../config/sendMail.js";
 import { getVerifyEmailHtml, getOtpHtml } from "../config/html.js";
 import { generateAccessToken, generateToken, revokeRefreshToken, verifyRefreshToken } from "../config/generateToken.js";
 import { generateCSRFToken } from "../config/csrfMiddleware.js";
+import { date } from "zod";
 
 
 export const registerUser = TryCatch(async (req, res) => {
@@ -204,7 +205,13 @@ export const verifyOtp = TryCatch(async(req,res) =>{
 
   res.status(200).json({ 
     message: `Welcome back, ${user.name}!`,
-    user});
+    user,
+    sessionInfo:{
+      sessionId: tokens.sessionId,
+      loginTime: new Date().toISOString(),
+      csrfToken: tokens.csrfToken,
+    }
+  });
     
 
   
@@ -264,7 +271,24 @@ export const resendOtp = TryCatch(async (req, res) => {
 export const myProfile = TryCatch(async(req,res) =>{
 
   const user = req.user;
-  res.status(200).json(user);
+
+  const sessionId  = req.sessionId;
+  const sessionData = await redisClient.get(`session:${sessionId}`);
+
+  let sessionInfo = null;
+  if(sessionData){
+    const parsedSession = JSON.parse(sessionData);
+    sessionInfo = {
+      sessionId,
+      loginTime: parsedSession.createdAt,
+      lastActivity: parsedSession.lastActivity,
+    };
+  }
+
+  res.status(200).json({
+    user,
+    sessionInfo
+  });
 });
 
 ////----------------refresh token---------------////
@@ -278,10 +302,13 @@ export const refreshToken = TryCatch(async(req,res) =>{
   const decoded = await verifyRefreshToken(refreshToken);
 
   if (!decoded) {
-    return res.status(400).json({ message: "Invalid refresh token." });
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    res.clearCookie('csrfToken');
+    return res.status(400).json({ message: "Session expired. Please login again." });
   }
 
-  generateAccessToken(decoded.id, res);
+  generateAccessToken(decoded.id, decoded.sessionId, res);
 
   res.status(200).json({ message: "Access token refreshed successfully." });
 });
