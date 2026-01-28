@@ -87,7 +87,7 @@ const VerifyOtp = () => {
             <label htmlFor="otp" className="leading-7 text-sm text-gray-600">Otp</label>
             <input type="text" id="otp" name="otp" value={otp} inputMode="numeric" pattern="[0-9]*" autoFocus onChange={(e) => setOtp(e.target.value)} required className="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out" />
           </div>
-          <ReCAPTCHA sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" onChange={onChange} />
+          <ReCAPTCHA sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" onChange={onChange} />    //// test site key used for captcha
 
           <button className="text-white  bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg disabled:opacity-50" disabled={loading || !captcha}>
             {loading ? "Verifying..." : "Verify"}
