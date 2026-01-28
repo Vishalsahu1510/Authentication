@@ -12,9 +12,9 @@ const VerifyOtp = () => {
   const [loading, setloading] = useState(false);
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
-  const [captcha,setCaptcha] = useState(false);
+  const [captcha, setCaptcha] = useState(false);
   const navigate = useNavigate();
-  const {setIsAuth, setUser } = AppData();
+  const { setIsAuth, setUser } = AppData();
 
   const email = localStorage.getItem("email");
 
@@ -55,7 +55,7 @@ const VerifyOtp = () => {
     setloading(true);
     // Handle form submission logic here
     try {
-      const {data} = await axios.post(`${Server}/api/v1/verify`, { email, otp }, { withCredentials: true });
+      const { data } = await axios.post(`${Server}/api/v1/verify`, { email, otp, captchaToken: captcha }, { withCredentials: true });
       toast.success(data.message);
       setIsAuth(true);
       setUser(data.user);
@@ -69,8 +69,8 @@ const VerifyOtp = () => {
   }
 
   function onChange(value) {
-    console.log("Captcha value:", value);
-    setCaptcha(true);
+    // Store the actual token, not just true/false
+    setCaptcha(value);
   }
 
   return (
@@ -87,7 +87,7 @@ const VerifyOtp = () => {
             <label htmlFor="otp" className="leading-7 text-sm text-gray-600">Otp</label>
             <input type="text" id="otp" name="otp" value={otp} inputMode="numeric" pattern="[0-9]*" autoFocus onChange={(e) => setOtp(e.target.value)} required className="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out" />
           </div>
-          <ReCAPTCHA sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" onChange={onChange} />    //// test site key used for captcha
+          <ReCAPTCHA sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY} onChange={onChange} />
 
           <button className="text-white  bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg disabled:opacity-50" disabled={loading || !captcha}>
             {loading ? "Verifying..." : "Verify"}

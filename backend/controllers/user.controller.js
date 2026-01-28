@@ -10,6 +10,7 @@ import { getVerifyEmailHtml, getOtpHtml, getForgotPasswordHtml } from "../config
 import { generateAccessToken, generateToken, revokeRefreshToken, verifyRefreshToken } from "../config/generateToken.js";
 import { generateCSRFToken } from "../config/csrfMiddleware.js";
 import jwt from "jsonwebtoken";
+// import { verifyRecaptcha } from "../config/recaptcha.js";
 
 
 export const registerUser = TryCatch(async (req, res) => {
@@ -178,11 +179,22 @@ export const loginUser = TryCatch(async (req, res) => {
 
 //-------------- verify OTP ------------------//
 export const verifyOtp = TryCatch(async (req, res) => {
+  // const { email, otp, captchaToken } = req.body;
   const { email, otp } = req.body;
 
   if (!email || !otp) {
     return res.status(400).json({ message: "Email and OTP are required" });
   }
+
+  // Verify reCAPTCHA token
+  // if (!captchaToken) {
+  //   return res.status(400).json({ message: "Please complete the captcha verification" });
+  // }
+
+  // const captchaResult = await verifyRecaptcha(captchaToken);
+  // if (!captchaResult.success) {
+  //   return res.status(400).json({ message: captchaResult.error || "Captcha verification failed" });
+  // }
 
   const otpKey = `otp:${email}`;
   const storedOtpString = await redisClient.get(otpKey);
@@ -352,10 +364,21 @@ export const adminController = TryCatch(async (req, res) => {
 
 export const forgotPassword = TryCatch(async (req, res) => {
   const { email } = req.body;
+  // const { email, captchaToken } = req.body;
 
   if (!email) {
     return res.status(400).json({ message: "Email is required" });
   }
+
+  // // Verify reCAPTCHA token
+  // if (!captchaToken) {
+  //   return res.status(400).json({ message: "Please complete the captcha verification" });
+  // }
+
+  // const captchaResult = await verifyRecaptcha(captchaToken);
+  // if (!captchaResult.success) {
+  //   return res.status(400).json({ message: captchaResult.error || "Captcha verification failed" });
+  // }
 
   const rateLimitKey = `forgot-password-rate-limit:${req.ip}:${email}`;
 

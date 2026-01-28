@@ -4,15 +4,22 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 import { Server } from '../main.jsx'
 import { useState } from 'react'
+// import ReCAPTCHA from "react-google-recaptcha";
 
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setloading] = useState(false);
   const [disable, setDisable] = useState(false);
+  // const [captcha, setCaptcha] = useState(null);
 
   const submitHandler = async (e) => {
     e.preventDefault();
+
+    // if (!captcha) {
+    //   return toast.error("Please verify captcha");
+    // }
+
     setloading(true);
     try {
       const data = await axios.post(`${Server}/api/v1/forgot-password`, { email }, { withCredentials: true });
@@ -25,6 +32,11 @@ const ForgotPassword = () => {
       setloading(false);
     }
   }
+
+  // const onCaptchaChange = (value) => {
+  //   setCaptcha(value);
+  // }
+
   return (
     <section className="text-gray-600 body-font">
       <div className="container px-5 py-24 mx-auto flex flex-wrap items-center">
@@ -39,7 +51,10 @@ const ForgotPassword = () => {
             <label htmlFor="email" className="leading-7 text-sm text-gray-600">Email</label>
             <input type="email" id="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out" />
           </div>
-          { disable ? <p className='text-green-500'>Check your email for a reset link</p> : <button className="text-white  bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg" disabled={loading}>
+          {/* <div className="mb-4">
+            <ReCAPTCHA sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY} onChange={onCaptchaChange} />
+          </div> */}
+          {disable ? <p className='text-green-500'>Check your email for a reset link</p> : <button className="text-white  bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg disabled:opacity-50" disabled={loading}>
             {loading ? "submiting..." : "Submit"}
           </button>}
           <div className="flex justify-between items-center mt-3">
