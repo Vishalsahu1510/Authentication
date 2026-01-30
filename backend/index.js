@@ -1,23 +1,19 @@
-import express from 'express';
 import dotenv from 'dotenv';
+dotenv.config();
+import express from 'express';
 import cookieParser from 'cookie-parser';
 import connectDB from './config/db.js';
-import {redisClient} from './config/redis.js';
+import { connectRedis } from './config/redis.js';
 import cors from 'cors';
-dotenv.config();
 
 await connectDB();
 
 
 
 
+await connectRedis();
 
 
-redisClient.connect()
-.then(() => {
-  console.log("Connected to Redis successfully");
-})
-.catch(console.error);
 
 const app = express();
 
